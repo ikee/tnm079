@@ -301,7 +301,6 @@ std::vector<unsigned int> HalfEdgeMesh::FindNeighborFaces(unsigned int vertexInd
   return foundFaces;
 }
 
-
 /*! \lab1 Implement the curvature */
 float HalfEdgeMesh::VertexCurvature(unsigned int vertexIndex) const
 {
@@ -309,30 +308,47 @@ float HalfEdgeMesh::VertexCurvature(unsigned int vertexIndex) const
   std::vector<unsigned int> oneRing = FindNeighborVertices(vertexIndex);
   assert(oneRing.size() != 0);
 
-  unsigned int curr, next;
+  unsigned int curr, next, prev;
   const Vector3<float> &vi = mVerts.at(vertexIndex).pos;
-  float angleSum = 0;
+  float cot_aj = 0;
+  float cot_Bj = 0;
+  Vector3<float> sum_prod;
   float area = 0;
   for(unsigned int i=0; i<oneRing.size(); i++){
     // connections
     curr = oneRing.at(i);
-    if(i < oneRing.size() - 1 )
+    if(i < oneRing.size() - 1 ) {
       next = oneRing.at(i+1);
-    else
+    } else {
       next = oneRing.front();
+    }
+
+    if(i == 0){
+      prev = oneRing.back();
+    } else {
+      prev = oneRing.at(i-1);
+    }
 
     // find vertices in 1-ring according to figure 5 in lab text
     // next - beta
     const Vector3<float> &nextPos = mVerts.at(next).pos;
+    const Vector3<float> &prevPos = mVerts.at(prev).pos;
     const Vector3<float> &vj = mVerts.at(curr).pos;
 
     // compute angle and area
-    angleSum +=  acos( (vj-vi)*(nextPos-vi) / ( (vj-vi).Length()*(nextPos-vi).Length() ) );
-    area += Cross((vi-vj), (nextPos-vj)).Length()*.5;
+    //angleSum +=  acos( (vj-vi)*(nextPos-vi) / ( (vj-vi).Length()*(nextPos-vi).Length() ) );
+    
+    cot_aj = Cotangent(vj, prevPos, vi);
+    cot_Bj = Cotangent(vj, nextPos, vi);
+
+    sum_prod += (cot_aj + cot_Bj) * (vi-vj);
+    area += (cot_aj + cot_Bj) * (vi-vj).Length() * (vi-vj).Length();
   }
-  return ( 2*M_PI - angleSum ) / area;
-  return 0;
+  float H = (sum_prod.Length() / VertexNormal(vertexIndex).Length()) / (area/2.0f);
+
+  return H;
 }
+
 
 float HalfEdgeMesh::FaceCurvature(unsigned int faceIndex) const
 {
