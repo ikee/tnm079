@@ -10,6 +10,7 @@
  *
  *************************************************************************************************/
 #include "Geometry/HalfEdgeMesh.h"
+#include <set>
 
 const unsigned int HalfEdgeMesh::BORDER = (std::numeric_limits<unsigned int>::max)();
 const unsigned int HalfEdgeMesh::UNINITIALIZED = (std::numeric_limits<unsigned int>::max)()-1;
@@ -508,7 +509,39 @@ float HalfEdgeMesh::Volume() const
 /*! \lab1 Calculate the number of shells  */
 int HalfEdgeMesh::Shells() const
 {
-  return 1;
+  std::set<unsigned int> verts;
+
+  for(unsigned int i = 0; i < mVerts.size(); i++){
+    verts.insert(i);
+  }
+
+  int shell = 0;
+
+  while(!verts.empty()){
+    std::set<unsigned int>::iterator it=verts.begin();
+    std::set<unsigned int> frontier;
+    frontier.insert(*it);
+    while(!frontier.empty()){
+      // expand first node
+      it = frontier.begin();
+      
+      std::vector<unsigned int> n_verts = FindNeighborVertices(*it);
+
+      verts.erase(*it);
+      frontier.erase(*it);
+
+      for(int j = 0; j < n_verts.size(); j++){
+        if(verts.count(n_verts[j]) > 0){
+
+          frontier.insert(n_verts[j]);
+          verts.erase(n_verts[j]);
+        }
+      }
+    }
+    shell++; 
+  }
+
+  return shell;
 }
 
 /*! \lab1 Implement the genus */
@@ -524,7 +557,7 @@ int HalfEdgeMesh::Genus() const
   std::cout << "F: " << F << std::endl;
   std::cout << "V: " << V << std::endl;
 
-  int G = (E - V - F + 2)/2;
+  int G = ((E - V - F )/2 ) + Shells();
   return G;
 }
 
