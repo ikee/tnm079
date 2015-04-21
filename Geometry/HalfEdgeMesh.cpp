@@ -515,8 +515,17 @@ int HalfEdgeMesh::Shells() const
 int HalfEdgeMesh::Genus() const
 {
   // Add code here
-  std::cerr << "Genus calculation not implemented for half-edge mesh!\n";
-  return 0;
+  // Two edges per "real" edge
+  int E = mEdges.size() / 2;
+  int V = mVerts.size();
+  int F = mFaces.size();
+  
+  std::cout << "E: " << E << std::endl;
+  std::cout << "F: " << F << std::endl;
+  std::cout << "V: " << V << std::endl;
+
+  int G = (E - V - F + 2)/2;
+  return G;
 }
 
 void HalfEdgeMesh::Dilate(float amount)
