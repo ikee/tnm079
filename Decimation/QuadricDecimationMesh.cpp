@@ -71,7 +71,16 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse * collapse)
   float cost = vec_res * temp;
 
   collapse->position = Vector3<float>(vec_res[0], vec_res[1], vec_res[2]);
-  collapse->cost = cost;  
+
+  //Lab2.2** (VG) modify cost
+
+  Vector3<float> f_norm = FaceNormal(mEdges[collapse->halfEdge].face); 
+  
+  Vector3<float> cam_vec = Vector3<float>(0,0,10) - collapse->position;
+
+  float heuristic = f_norm * cam_vec.Normalize();
+
+  collapse->cost = cost * (1 + heuristic);  
 
   //std::cerr << "computeCollapse in QuadricDecimationMesh not implemented.\n";
 }
