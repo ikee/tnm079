@@ -48,8 +48,32 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse * collapse)
 {
   // Compute collapse->position and collapse->cost here
   // based on the quadrics at the edge endpoints
+  
+  unsigned int v0 = mEdges[collapse->halfEdge].vert;
+  unsigned int v1 =  mEdges[mEdges[collapse->halfEdge].pair].vert;
+  Matrix4x4<float> Q0 = createQuadricForVert(v0);
+  Matrix4x4<float> Q1 = createQuadricForVert(v1);
 
-  std::cerr << "computeCollapse in QuadricDecimationMesh not implemented.\n";
+  Matrix4x4<float> Q, Qv;
+  Q = Qv = Q0 + Q1;
+
+  float* q = Qv.GetArrayPtr();
+  q[3*4 + 0] = 0;    
+  q[3*4 + 1] = 0;    
+  q[3*4 + 2] = 0;    
+  q[3*4 + 3] = 1;    
+
+  Vector4<float> vec_base = Vector4<float>(0,0,0,1);
+  Vector4<float> vec_res = Qv.Inverse() * vec_base;
+
+  Vector4<float> temp = Q * vec_res;
+
+  float cost = vec_res * temp;
+
+  collapse->position = Vector3<float>(vec_res[0], vec_res[1], vec_res[2]);
+  collapse->cost = cost;  
+
+  //std::cerr << "computeCollapse in QuadricDecimationMesh not implemented.\n";
 }
 
 /*! After each edge collapse the vertex properties need to be updated */
@@ -68,6 +92,11 @@ Matrix4x4<float> QuadricDecimationMesh::createQuadricForVert(unsigned int indx) 
                    {0,0,0,0},
                    {0,0,0,0}};
   Matrix4x4<float> Q(q);
+  std::vector<unsigned int> f_neighbors = FindNeighborFaces(indx);
+  
+  for (int i = 0; i < f_neighbors.size(); i++) {
+    Q += createQuadricForFace(f_neighbors[i]);
+  }
 
   // The quadric for a vertex is the sum of all the quadrics for the adjacent faces
   // Tip: Matrix4x4 has an operator +=
@@ -79,9 +108,26 @@ Matrix4x4<float> QuadricDecimationMesh::createQuadricForVert(unsigned int indx) 
  */
 Matrix4x4<float> QuadricDecimationMesh::createQuadricForFace(unsigned int indx) const{
 
+  Vertex f_vert = mVerts [ mEdges[ mFaces[indx].edge ].vert ];
+
+  Vector3<float> f_norm =  FaceNormal(indx);
+
+  float a = f_norm[0];
+  float b = f_norm[1];
+  float c = f_norm[2];
+  float d = -(f_norm * f_vert.pos);
+  
   // Calculate the quadric (outer product of plane parameters) for a face
   // here using the formula from Garland and Heckbert
-  return Matrix4x4<float>();
+
+  float kp[4][4] = {{a*a,a*b,a*c,a*d},
+                    {b*a,b*b,b*c,b*d},
+                    {c*a,c*b,c*c,c*d},
+                    {d*a,d*b,d*c,d*d}};
+
+  Matrix4x4<float> f_Q(kp);
+
+  return f_Q;
 }
 
 

@@ -56,7 +56,7 @@ set(MOA_EXECUTABLE_DIR ${EXECUTABLE_OUTPUT_PATH})
 # Boolean values to build the different projects
 #
 option(BUILD_LAB1 "Build Lab 1 - Mesh" ON)
-option(BUILD_LAB2 "Build Lab 2 - Decimation" OFF)
+option(BUILD_LAB2 "Build Lab 2 - Decimation" ON)
 option(BUILD_LAB3 "Build Lab 3 - Subdivision" OFF)
 option(BUILD_LAB4 "Build Lab 4 - Implicits" OFF)
 option(BUILD_LAB5 "Build Lab 5 - Levelsets" OFF)
