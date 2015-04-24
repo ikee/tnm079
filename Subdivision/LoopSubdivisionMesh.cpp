@@ -43,9 +43,12 @@ void LoopSubdivisionMesh::Subdivide()
     }
   }
 
+  std::cerr << "before saving mesh \n";
   // Assigns the new mesh
   *this = LoopSubdivisionMesh(subDivMesh, ++mNumSubDivs);
+  std::cerr << "after saving mesh \n";
   Update();
+  std::cerr << "after update! \n";
 }
 
 
@@ -79,6 +82,7 @@ std::vector< std::vector<Vector3<float> > > LoopSubdivisionMesh::Subdivide(unsig
   Vector3<float> pn3 = EdgeRule(e0);
   Vector3<float> pn4 = EdgeRule(e1);
   Vector3<float> pn5 = EdgeRule(e2);
+  std::cerr << "before face rule \n";
 
   // add the four new triangles to new mesh
   std::vector<Vector3<float> > verts;
@@ -93,6 +97,7 @@ std::vector< std::vector<Vector3<float> > > LoopSubdivisionMesh::Subdivide(unsig
   verts.clear();
   verts.push_back(pn5); verts.push_back(pn4); verts.push_back(pn2);
   faces.push_back(verts);
+  std::cerr << "after face rule \n";
   return faces;
 }
 
@@ -101,10 +106,23 @@ std::vector< std::vector<Vector3<float> > > LoopSubdivisionMesh::Subdivide(unsig
 */
 Vector3<float> LoopSubdivisionMesh::VertexRule(unsigned int vertexIndex)
 {
+
+  std::cerr << "before vert rule \n";
   // Get the current vertex
   Vector3<float> vtx = v(vertexIndex).pos;
+  std::vector<unsigned int> vert_vec = FindNeighborVertices(vertexIndex);
+  int k = vert_vec.size();
 
+  //TODO no boundary
+  float beta = Beta(k); 
 
+  vtx = (1.0f-k*beta)*vtx;
+
+  for(int i = 0; i < k ; i++){
+    vtx += beta*v(vert_vec.at(i)).pos; 
+  }
+
+  std::cerr << "after vert rule \n";
   return vtx;
 }
 
@@ -113,13 +131,24 @@ Vector3<float> LoopSubdivisionMesh::VertexRule(unsigned int vertexIndex)
 */
 Vector3<float> LoopSubdivisionMesh::EdgeRule(unsigned int edgeIndex)
 {
+  //TODO Not handling bounderies.
+
+
+  std::cerr << "before edge rule \n";
 
   // Place the edge vertex halfway along the edge
   HalfEdge & e0 = e(edgeIndex);
   HalfEdge & e1 = e(e0.pair);
-  Vector3<float> & v0 = v(e0.vert).pos;
-  Vector3<float> & v1 = v(e1.vert).pos;
-  return (v0 + v1) * 0.5;
+  Vector3<float> v0 = v(e0.vert).pos;
+  Vector3<float> v1 = v(e1.vert).pos;
+  Vector3<float> v2 = v(e(e0.prev).vert).pos;
+  Vector3<float> v3 = v(e(e1.prev).vert).pos;
+
+  Vector3<float> result = 1.0f/8.0f * (3.0f*v0 + 3.0f*v1 + v2 + v3);
+
+  //result = (v0 + v1) * 0.5f;
+  std::cerr << "after edge rule"<< result << " \n";
+  return result;
 }
 
 //! Return weights for interior verts
