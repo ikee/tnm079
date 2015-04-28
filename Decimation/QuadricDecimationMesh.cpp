@@ -103,7 +103,7 @@ Matrix4x4<float> QuadricDecimationMesh::createQuadricForVert(unsigned int indx) 
   Matrix4x4<float> Q(q);
   std::vector<unsigned int> f_neighbors = FindNeighborFaces(indx);
   
-  for (int i = 0; i < f_neighbors.size(); i++) {
+  for (unsigned int i = 0; i < f_neighbors.size(); i++) {
     Q += createQuadricForFace(f_neighbors[i]);
   }
 
@@ -148,15 +148,63 @@ void QuadricDecimationMesh::Render()
   glMatrixMode(GL_MODELVIEW);
 
   if (mVisualizationMode == QuadricIsoSurfaces)
-    {
+  {
+    // Implement the quadric visualization here
+
+    GLUquadric* quadratic = gluNewQuadric();
+    if( !quadratic){
+      std::cerr << "Cannot initialize quadartic n";
+    }
+    gluQuadricNormals(quadratic, GLU_SMOOTH);
+    //gluQuadricDrawStyle( quadratic, GLU_FILL);
+    gluQuadricTexture(quadratic, GL_TRUE);
+
+    float err_max = 0.0f;
+
+    for(unsigned int index = 0; index < mVerts.size(); index++) {
+
+      Vertex vert = mVerts[index];
+
+      Matrix4x4<float> Q = mQuadrics[index];
+
+      Vector4<float> position = Vector4<float>(vert.pos[0], vert.pos[1], vert.pos[2], 1);
+      Vector4<float> temp = Q * position;
+
+      float error = position * temp;
+      err_max = std::max(error, err_max);
+
+      if(error < 0.f){
+        continue;
+      }
+
+      std::cout << "Error is: " << error << std::endl;
+
+      Matrix4x4<float> R;
+      if(!Q.CholeskyFactorization(R)) {
+        continue;
+      }
+      R = R.Inverse();
+      
+      std::cout << R << "\n";
+      
       // Apply transform
       glPushMatrix(); // Push modelview matrix onto stack
+      
+      Matrix4x4<float> ogl_mat = R.ToGLMatrix();
 
-      // Implement the quadric visualization here
-      std::cout << "Quadric visualization not implemented" << std::endl;
+      glMultMatrixf( ogl_mat.GetArrayPtr() );
+
+      glTranslatef( position[0], position[1], position[2]); 
+      gluSphere( quadratic, 0.01f, 8, 8);
 
       // Restore modelview matrix
       glPopMatrix();
+
     }
+
+    gluDeleteQuadric(quadratic); 
+    std::cout << "err_max = " << err_max << "\n";
+
+  }
 }
 
