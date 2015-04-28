@@ -1,5 +1,6 @@
 
 #include "UniformCubicSpline.h"
+#include <cmath>
 
 UniformCubicSpline::UniformCubicSpline(const std::vector<Vector3<float> > &joints,
                                        Vector3<float> lineColor,
@@ -56,7 +57,9 @@ Vector3<float> UniformCubicSpline::GetValue(float t)
 {
   Vector3<float> val;
   float sum = 0;
-  for (unsigned int i = 0; i < mCoefficients.size(); i++) {
+  int index = t + 0.5f;
+
+  for (unsigned int i = std::max(0, index-2); i < std::min(index+2+1,(int) mCoefficients.size()); i++) {
     float bval = GetBSplineValue(i, t);
     val += mCoefficients.at(i)*bval;
     sum += bval;
