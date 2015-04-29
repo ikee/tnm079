@@ -117,7 +117,22 @@ float Implicit::GetCurvature(float x, float y, float z) const
   // Implement finite difference evaluation of curvature at world coordinates (x,y,z)
   // Use mDelta variable as epsilon in eqn. 16 in lab text
   std::cerr << "Implicit::GetCurvature() not implemented" << std::endl;
-  return 0;
+  
+  float x_1 = GetValue(x + mDelta,y,z);
+  float xyz_0 = GetValue(x,y,z); 
+  float x_2 = GetValue(x - mDelta,y,z); 
+
+  float y_1 = GetValue(x,y + mDelta,z); 
+  float y_2 = GetValue(x,y - mDelta,z); 
+
+  float z_1 = GetValue(x,y,z + mDelta); 
+  float z_2 = GetValue(x,y,z - mDelta); 
+
+  float d_xx = (x_1 - xyz_0 + x_2)/(mDelta*mDelta);
+  float d_yy = (y_1 - xyz_0 + y_2)/(mDelta*mDelta);
+  float d_zz = (z_1 - xyz_0 + z_2)/(mDelta*mDelta);
+
+  return d_xx + d_yy + d_zz;
 }
 
 
