@@ -90,7 +90,14 @@ public:
   }
 
   virtual float GetValue(float x, float y, float z) const {
-    return 0;
+    float p = mBlend;
+    float D_A = std::exp(-left->GetValue(x,y,z));
+    float D_B = std::exp(-right->GetValue(x,y,z));
+
+    float base = (std::pow(D_A, p) + std::pow(D_B, p));
+    float result = std::pow(base, 1.0f/p);
+    result = std::log(result);
+    return result;
   }
 
 protected :
@@ -107,7 +114,14 @@ public:
   }
 
   virtual float GetValue(float x, float y, float z) const {
-    return 0;
+    float p = mBlend;
+    float D_A = std::exp(-left->GetValue(x,y,z));
+    float D_B = std::exp(-right->GetValue(x,y,z));
+
+    float base = (std::pow(D_A, -p) + std::pow(D_B, -p));
+    float result = std::pow(base, -1.0f/p);
+    result = std::log(result);
+    return result;
   }
 
 protected :
@@ -124,7 +138,14 @@ public:
   }
 
   virtual float GetValue(float x, float y, float z) const {
-    return 0;
+    float p = mBlend;
+    float D_A = std::exp(-left->GetValue(x,y,z));
+    float D_B = std::exp(-right->GetValue(x,y,z));
+
+    float base = (std::pow(D_A, -p) - std::pow(D_B, -p));
+    float result = std::pow(base, -1.0f/p);
+    result = std::log(result);
+    return result;
   }
 
 protected :
