@@ -192,10 +192,10 @@ void QuadricDecimationMesh::Render()
       
       Matrix4x4<float> ogl_mat = R.ToGLMatrix();
 
-      glMultMatrixf( ogl_mat.GetArrayPtr() );
+      glLoadMatrixf( ogl_mat.GetArrayPtr() );
 
-      glTranslatef( position[0], position[1], position[2]); 
-      gluSphere( quadratic, 0.01f, 8, 8);
+      //glTranslatef( position[0], position[1], position[2]); 
+      gluSphere( quadratic, error, 8, 8);
 
       // Restore modelview matrix
       glPopMatrix();

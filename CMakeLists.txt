@@ -59,7 +59,7 @@ set(MOA_EXECUTABLE_DIR ${EXECUTABLE_OUTPUT_PATH})
 option(BUILD_LAB1 "Build Lab 1 - Mesh" ON)
 option(BUILD_LAB2 "Build Lab 2 - Decimation" ON)
 option(BUILD_LAB3 "Build Lab 3 - Subdivision" ON)
-option(BUILD_LAB4 "Build Lab 4 - Implicits" OFF)
+option(BUILD_LAB4 "Build Lab 4 - Implicits" ON)
 option(BUILD_LAB5 "Build Lab 5 - Levelsets" OFF)
 option(BUILD_LAB6 "Build Lab 6 - Fluids" OFF)
 

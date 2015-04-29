@@ -47,7 +47,8 @@ public:
     // and can be transformed like all implicit surfaces.
     // Then, get values from left and right children and perform the
     // boolean operation.
-    return 0;
+
+    return std::min(left->GetValue(x,y,z), right->GetValue(x,y,z));
   }
 };
 
@@ -61,7 +62,7 @@ public:
   }
 
   virtual float GetValue(float x, float y, float z) const {
-    return 0;
+    return std::max(left->GetValue(x,y,z), right->GetValue(x,y,z));
   }
 };
 
@@ -75,7 +76,7 @@ public:
   }
 
   virtual float GetValue(float x, float y, float z) const {
-    return 0;
+    return std::max(left->GetValue(x,y,z), -right->GetValue(x,y,z));
   }
 };
 
