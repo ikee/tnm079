@@ -91,8 +91,21 @@ Vector3<float> Implicit::GetGradient(float x, float y, float z) const
 {
   // Implement finite difference evaluation of gradient at world coordinates (x,y,z)
   // Use mDelta variable as epsilon in eqn. 16 in lab text
-  std::cerr << "Implicit::GetGradient() not implemented" << std::endl;
-  return Vector3<float>(0,0,0);
+  
+  float x_1 = GetValue(x + mDelta,y,z); 
+  float x_2 = GetValue(x - mDelta,y,z); 
+
+  float y_1 = GetValue(x,y + mDelta,z); 
+  float y_2 = GetValue(x,y - mDelta,z); 
+
+  float z_1 = GetValue(x,y,z + mDelta); 
+  float z_2 = GetValue(x,y,z - mDelta); 
+
+  float d_x = (x_1 - x_2)/(2.0f*mDelta);
+  float d_y = (y_1 - y_2)/(2.0f*mDelta);
+  float d_z = (z_1 - z_2)/(2.0f*mDelta);
+
+  return Vector3<float>(d_x,d_y,d_z);
 }
 
 
