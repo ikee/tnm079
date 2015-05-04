@@ -233,7 +233,8 @@ int LevelSet::GetNarrowBandWidth()
 // represents world coordinates.
 float LevelSet::DiffXm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k) - mGrid.GetValue(i-1,j,k);
+  return width/mDx;
 }
 
 //! \lab4
@@ -241,8 +242,9 @@ float LevelSet::DiffXm(int i, int j, int k) const
 // By convention, we use (i,j,k) to represent grid coordinates, while (x,y,z)
 // represents world coordinates.
 float LevelSet::DiffXp(int i, int j, int k) const
-{
-  return 0;
+{  
+  float width = mGrid.GetValue(i+1,j,k) - mGrid.GetValue(i,j,k);
+  return width/mDx;
 }
 
 //! \lab4
@@ -251,7 +253,8 @@ float LevelSet::DiffXp(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffXpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i+1,j,k) - mGrid.GetValue(i-1,j,k);
+  return width/(2.0f*mDx);
 }
 
 //! \lab4
@@ -260,7 +263,8 @@ float LevelSet::DiffXpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2Xpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i+1,j,k) - 2 * mGrid.GetValue(i,j,k) + mGrid.GetValue(i-1,j,k);
+  return width/(mDx*mDx);
 }
 
 
@@ -270,7 +274,8 @@ float LevelSet::Diff2Xpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffYm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k) - mGrid.GetValue(i,j-1,k);
+  return width/mDx;
 }
 
 //! \lab4
@@ -278,8 +283,9 @@ float LevelSet::DiffYm(int i, int j, int k) const
 // By convention, we use (i,j,k) to represent grid coordinates, while (x,y,z)
 // represents world coordinates.
 float LevelSet::DiffYp(int i, int j, int k) const
-{
-  return 0;
+{  
+  float width = mGrid.GetValue(i,j+1,k) - mGrid.GetValue(i,j,k);
+  return width/mDx;
 }
 
 //! \lab4
@@ -288,7 +294,8 @@ float LevelSet::DiffYp(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffYpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j+1,k) - mGrid.GetValue(i,j-1,k);
+  return width/(2.0f*mDx);
 }
 
 //! \lab4
@@ -297,7 +304,8 @@ float LevelSet::DiffYpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2Ypm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j+1,k) - 2 * mGrid.GetValue(i,j,k) + mGrid.GetValue(i,j-1,k);
+  return width/(mDx*mDx);
 }
 
 //! \lab4
@@ -306,7 +314,8 @@ float LevelSet::Diff2Ypm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffZm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k) - mGrid.GetValue(i,j,k-1);
+  return width/mDx;
 }
 
 //! \lab4
@@ -315,7 +324,8 @@ float LevelSet::DiffZm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffZp(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k+1) - mGrid.GetValue(i,j,k);
+  return width/mDx;
 }
 
 //! \lab4
@@ -324,7 +334,8 @@ float LevelSet::DiffZp(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::DiffZpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k+1) - mGrid.GetValue(i,j,k-1);
+  return width/(2.0f*mDx);
 }
 
 //! \lab4
@@ -333,7 +344,8 @@ float LevelSet::DiffZpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2Zpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j,k+1) - 2 * mGrid.GetValue(i,j,k) + mGrid.GetValue(i,j,k-1);
+  return width/(mDx*mDx);
 }
 
 //! \lab4
@@ -342,7 +354,9 @@ float LevelSet::Diff2Zpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2XYpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i+1,j+1,k) -  mGrid.GetValue(i+1,j-1,k) +
+                mGrid.GetValue(i-1,j-1,k) -  mGrid.GetValue(i-1,j+1,k);
+  return width/(4.0f*mDx*mDx);
 }
 
 //! \lab4
@@ -351,7 +365,9 @@ float LevelSet::Diff2XYpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2YZpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i,j+1,k+1) -  mGrid.GetValue(i,j-1,k+1) +
+                mGrid.GetValue(i,j-1,k-1) -  mGrid.GetValue(i,j+1,k-1);
+  return width/(4.0f*mDx*mDx);
 }
 
 //! \lab4
@@ -360,7 +376,9 @@ float LevelSet::Diff2YZpm(int i, int j, int k) const
 // represents world coordinates.
 float LevelSet::Diff2ZXpm(int i, int j, int k) const
 {
-  return 0;
+  float width = mGrid.GetValue(i+1,j,k+1) -  mGrid.GetValue(i+1,j,k-1) +
+                mGrid.GetValue(i-1,j,k-1) -  mGrid.GetValue(i-1,j,k+1);
+  return width/(4.0f*mDx*mDx);
 }
 
 
