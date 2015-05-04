@@ -37,7 +37,7 @@ public :
   virtual float ComputeTimestep()
   {
     // Compute and return a stable timestep
-    return 1;
+    return mLS->GetDx()/std::abs(mF);
   }
 
   virtual void Propagate(float time)
@@ -62,8 +62,21 @@ public :
 
   virtual float Evaluate(unsigned int i, unsigned int j, unsigned int k)
   {
+    // Compute the sign function (from central differencing)
+    float dx = mLS->GetDx();
+    float ddxc = mLS->DiffXpm(i,j,k);
+    float ddyc = mLS->DiffYpm(i,j,k);
+    float ddzc = mLS->DiffZpm(i,j,k);
+    float normgrad2 = ddxc*ddxc + ddyc*ddyc + ddzc*ddzc;
+    float val = GetGrid().GetValue(i,j,k);
+    float sign = val / std::sqrt(val*val + normgrad2*dx*dx);
+
+    // Compute upwind differences using Godunov's scheme
+    float ddx2, ddy2, ddz2;
+    Godunov(i,j,k, sign, ddx2, ddy2, ddz2);
+
     // Compute the rate of change (dphi/dt)
-    return 0;
+    return -mF * std::sqrt(ddx2 + ddy2 + ddz2);
   }
 
 
