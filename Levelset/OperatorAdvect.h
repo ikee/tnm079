@@ -38,7 +38,11 @@ public :
   {
     // Compute and return a stable timestep
     // (Hint: Function3D::GetMaxValue())
-    return 1;
+    Vector3<float> max_V = mVectorField->GetMaxValue();
+    float time_step = mLS->GetDx() / std::max(std::abs(max_V[0]), std::max(std::abs(max_V[1]), std::abs(max_V[2])));
+    std::cout << time_step << "\n";
+    return time_step; 
+    //return 1;
   }
 
   virtual void Propagate(float time)
@@ -67,7 +71,44 @@ public :
     // the velocity field used for advection needs to be sampled in
     // world coordinates (x,y,z). You can use LevelSet::TransformGridToWorld()
     // for this task.
-    return 0;
+    //
+    // step 1:
+    float x, y, z;
+    x = i;
+    y = j;
+    z = k;    
+
+    mLS->TransformGridToWorld(x,y,z);
+
+    Vector3<float> v_ijk, grad;
+
+    v_ijk = mVectorField->GetValue(x,y,z);
+    
+    // step 2:
+    float dx, dy, dz;
+    if(v_ijk[0] < 0.0f) {
+      dx = mLS->DiffXp(i,j,k);
+    } else { // if v_ijk[0] == 0, don't care what dx is!
+      dx = mLS->DiffXm(i,j,k);
+    }
+
+    if(v_ijk[1] < 0.0f) {
+      dy = mLS->DiffYp(i,j,k);
+    } else { // if v_ijk[1] == 0, don't care what dx is!
+      dy = mLS->DiffYm(i,j,k);
+    }
+
+    if(v_ijk[2] < 0.0f) {
+      dz = mLS->DiffZp(i,j,k);
+    } else { // if v_ijk[2] == 0, don't care what dx is!
+      dz = mLS->DiffZm(i,j,k);
+    }
+
+    grad = Vector3<float>(dx, dy, dz);
+
+    //std::cout << grad << " \n *  \n" << v_ijk << "\n = \n" << (-v_ijk * grad) << "\n";
+
+    return -(v_ijk * grad);
   }
 
 };
