@@ -161,6 +161,8 @@ void FluidSolver::ExternalForces(float dt)
 {
   if (mExternalForces == NULL)  return;
 
+  Volume<Vector3<float> > velocities = mVelocityField;
+
   float x, y, z;
   for (int i = 0; i < mVoxels.GetDimX(); i++) {
     for (int j = 0; j < mVoxels.GetDimY(); j++) {
@@ -171,11 +173,16 @@ void FluidSolver::ExternalForces(float dt)
         // the integration to update the velocity field (mVelocityField). The simplest
         // possible integrator is the explicit Euler.
         // TODO: Add code here
+        TransformGridToWorld(i,j,k, x,y,z); 
+        velocities.SetValue(i,j,k, mVelocityField.GetValue(i,j,k) + dt * mExternalForces->GetValue(x,y,z));
       }
     }
   }
-}
 
+  // Update the current velocity field
+  mVelocityField = velocities;
+
+}
 
 // Compute the self advection term
 void FluidSolver::SelfAdvection(float dt, int steps)
@@ -218,6 +225,54 @@ void FluidSolver::EnforceDirichletBoundaryCondition()
         // the velocity to the boundary plane by setting the
         // velocity to zero along the given dimension.
         // TODO: Add code here
+        
+       Vector3<float> velocity = mVelocityField.GetValue(i,j,k);  
+        
+
+        if(IsFluid(i,j,k)) {
+
+ 
+          // check x-axis
+          if(IsSolid(i-1,j,k)) {
+            if(velocity[0] < 0) {
+              velocity[0] = 0;
+            }
+          }
+          if(IsSolid(i+1,j,k)) {
+            if(velocity[0] > 0) {
+              velocity[0] = 0;
+            }
+          }
+          
+          // check y axis
+          if(IsSolid(i,j-1,k)) {
+            if(velocity[1] < 0) {
+              velocity[1] = 0;
+            }
+          }
+          if(IsSolid(i,j+1,k)) {
+            if(velocity[1] > 0) {
+              velocity[1] = 0;
+            }
+          }
+
+          // check z axis
+          if(IsSolid(i,j,k-1)) {
+            if(velocity[2] < 0) {
+              velocity[2] = 0;
+            }
+          }
+          if(IsSolid(i,j,k+1)) {
+            if(velocity[2] > 0) {
+              velocity[2] = 0;
+            }
+          }
+        } else {
+          continue;
+        }
+       
+        mVelocityField.SetValue(i,j,k, velocity); 
+        
       }
     }
   }
@@ -263,7 +318,12 @@ void FluidSolver::Projection()
           // Compute entry for b vector (divergence of the velocity field: \nabla \dot w_i,j,k)
           // TODO: Add code here
 
-          // Compute entries for A matrix (discrete Laplacian operator).
+          b[ind] = mVelocityField.GetValue(i+1,j,k)[0] -mVelocityField.GetValue(i-1,j,k)[0];
+          
+          b[ind] += mVelocityField.GetValue(i,j+1,k)[1] -mVelocityField.GetValue(i,j-1,k)[1];
+          b[ind] += mVelocityField.GetValue(i,j,k+1)[2] -mVelocityField.GetValue(i,j,k-1)[2];
+          b[ind] = b[ind] / (2.0f * mDx); 
+
           // The A matrix is a sparse matrix but can be used like a regular
           // matrix. That is, you access the elements by A(row, column).
           // However, due to the matrix data structure you cannot read
@@ -274,6 +334,54 @@ void FluidSolver::Projection()
           // a solid (allow no change of flow in that direction).
           // Remember to treat the boundaries of (i,j,k).
           // TODO: Add code here
+
+          //std::vector<int> row;
+
+          int nbrOfSolids = 0;
+          // i      
+          if(IsSolid(i+1,j,k)) {
+            A(ind, ind_ip) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_ip) = 1.0f/dx2;
+          }
+          if(IsSolid(i-1,j,k)) {
+            A(ind, ind_im) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_im) = 1.0f/dx2;
+          }
+
+          // j  
+           if(IsSolid(i,j+1,k)) {
+            A(ind, ind_jp) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_jp) = 1.0f/dx2;
+          }
+          if(IsSolid(i,j-1,k)) {
+            A(ind, ind_jm) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_jm) = 1.0f/dx2;
+          }
+
+          // k
+           if(IsSolid(i,j,k+1)) {
+            A(ind, ind_kp) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_kp) = 1.0f/dx2;
+          }
+          if(IsSolid(i,j,k-1)) {
+            A(ind, ind_km) = 0;
+            nbrOfSolids++;
+          } else {        
+            A(ind, ind_km) = 1.0f/dx2;
+          }            
+
+          A(ind, ind) = -6.0f/dx2 + ((float)nbrOfSolids)/dx2;
+
         }
       }
     }
@@ -308,6 +416,16 @@ void FluidSolver::Projection()
           // and subtract this gradient from the velocity field.
           // Thereby removing divergence - preserving volume.
           // TODO: Add code here
+          
+          Vector3<float> gradient;
+
+          gradient[0] = (x[ind_ip] - x[ind_im])/(2.0f*mDx);
+          gradient[1] = (x[ind_jp] - x[ind_jm])/(2.0f*mDx);
+          gradient[2] = (x[ind_kp] - x[ind_km])/(2.0f*mDx);
+          
+          Vector3<float> velocity = mVelocityField.GetValue(i,j,k);
+          mVelocityField.SetValue(i,j,k, velocity - gradient);
+
         }
       }
     }
