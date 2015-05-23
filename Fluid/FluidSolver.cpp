@@ -204,6 +204,28 @@ void FluidSolver::SelfAdvection(float dt, int steps)
         // points, use mVelocityField.GetValue(float i, float j, float k) for trilinear
         // interpolation.
         // TODO: Add code here
+		  
+
+		  Vector3<float> currentVelocity = mVelocityField.GetValue(i, j, k);
+
+		  Vector3<float> currentPosition = Vector3<float>(i,j,k); 
+
+		  for(int step = 0; step < steps; step++) {
+			  // get direction.
+			  
+			  // we are tracing back in time, hence -=
+			  // scale dt to number of steps.
+			  currentPosition[0] -= currentVelocity[0]*dt/steps/mDx;
+			  currentPosition[1] -= currentVelocity[1]*dt/steps/mDx;
+			  currentPosition[2] -= currentVelocity[2]*dt/steps/mDx;
+
+			  // move in direction
+			  currentVelocity = mVelocityField.GetValue(currentPosition[0],currentPosition[1],currentPosition[2]);
+
+		  }
+
+		  velocities.SetValue(i,j,k, currentVelocity);
+
       }
     }
   }
@@ -297,6 +319,11 @@ void FluidSolver::Projection()
 
   float dx2 = mDx*mDx;
 
+  float lostVolume = mInitialVolume - mCurrentVolume;
+
+  int negBs = 0;
+  std::vector<int> sinkIndices;
+
   std::cerr << "Building A matrix and b vector..." << std::endl;
   for (int i = 0; i < mVoxels.GetDimX(); i++) {
     for (int j = 0; j < mVoxels.GetDimY(); j++) {
@@ -323,6 +350,15 @@ void FluidSolver::Projection()
           b[ind] += mVelocityField.GetValue(i,j+1,k)[1] -mVelocityField.GetValue(i,j-1,k)[1];
           b[ind] += mVelocityField.GetValue(i,j,k+1)[2] -mVelocityField.GetValue(i,j,k-1)[2];
           b[ind] = b[ind] / (2.0f * mDx); 
+
+		  if(lostVolume > 0.0f ){
+			  if(b[ind] == 0.0f ){
+				b[ind] += (mInitialVolume - mCurrentVolume) / 0.02f;
+				std::cout << "We have still standing fluid!!!\n";
+			  //} else if (b[ind] < 0.0f) {
+				//b[ind] += (mInitialVolume - mCurrentVolume) / 0.02f;
+			  }
+		  }
 
           // The A matrix is a sparse matrix but can be used like a regular
           // matrix. That is, you access the elements by A(row, column).
@@ -389,6 +425,26 @@ void FluidSolver::Projection()
 
   // Rebuild the sparse matrix structure
   A.endPush();
+
+  // MVG: compensate lost volume.
+  /*
+  float lostVolume = mInitialVolume - mCurrentVolume;
+
+  std::cout << "\n\n Neg B's are: " << negBs << "\n\n";
+
+  if(negBs > 0 && lostVolume > 0) {
+	  float volumeAddition = lostVolume/mDx/(float)negBs;
+	  
+	  std::cout << "\n\n volumeAddition: " << volumeAddition << "\n\n";
+	  for(int i = 0;i < sinkIndices.size();i++) {
+		  b[sinkIndices[i]] -= volumeAddition;
+	  }
+  }
+  */
+  // END MVG.
+
+
+
 
   // Solve Ax=b using conjugate gradient
   std::cerr << "Conjugate gradient solver... ";
