@@ -64,9 +64,16 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse * collapse)
   q[3*4 + 3] = 1;    
 
   Vector4<float> vec_base = Vector4<float>(0,0,0,1);
-  Vector4<float> vec_res = Qv.Inverse() * vec_base;
 
-  Vector4<float> temp = Q * vec_res;
+  Vector4<float> vec_res;
+
+  if (Qv.IsSingular()) {
+	vec_res = Qv.Inverse() * vec_base;
+  } else {
+	Vector3<float> temp = (mVerts[v0].pos + mVerts[v1].pos)*0.5f; 
+	vec_res = Vector4<float>(temp[0], temp[1], temp[2], 1);
+  }
+	Vector4<float> temp = Q * vec_res;
 
   float cost = vec_res * temp;
 
@@ -165,10 +172,18 @@ void QuadricDecimationMesh::Render()
 
       Vertex vert = mVerts[index];
 
-      Matrix4x4<float> Q = mQuadrics[index];
+      Matrix4x4<float> Qv = mQuadrics[index];
+
+	  /*
+	  float* q = Qv.GetArrayPtr();
+	  q[3*4 + 0] = 0;    
+	  q[3*4 + 1] = 0;    
+	  q[3*4 + 2] = 0;    
+	  q[3*4 + 3] = 1;    
+	  */
 
       Vector4<float> position = Vector4<float>(vert.pos[0], vert.pos[1], vert.pos[2], 1);
-      Vector4<float> temp = Q * position;
+      Vector4<float> temp = Qv * position;
 
       float error = position * temp;
       err_max = std::max(error, err_max);
@@ -177,22 +192,22 @@ void QuadricDecimationMesh::Render()
         continue;
       }
 
-      std::cout << "Error is: " << error << std::endl;
+      //std::cout << "Error is: " << error << std::endl;
 
       Matrix4x4<float> R;
-      if(!Q.CholeskyFactorization(R)) {
+      if(!Qv.CholeskyFactorization(R)) {
         continue;
       }
       R = R.Inverse();
       
-      std::cout << R << "\n";
+      //std::cout << R << "\n";
       
       // Apply transform
       glPushMatrix(); // Push modelview matrix onto stack
       
       Matrix4x4<float> ogl_mat = R.ToGLMatrix();
 
-      glLoadMatrixf( ogl_mat.GetArrayPtr() );
+      glMultMatrixf( ogl_mat.GetArrayPtr() );
 
       //glTranslatef( position[0], position[1], position[2]); 
       gluSphere( quadratic, error, 8, 8);
