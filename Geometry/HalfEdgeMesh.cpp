@@ -11,6 +11,8 @@
  *************************************************************************************************/
 #include "Geometry/HalfEdgeMesh.h"
 #include <set>
+#include <ctime>
+#include <iomanip>      // std::setprecision
 
 const unsigned int HalfEdgeMesh::BORDER = (std::numeric_limits<unsigned int>::max)();
 const unsigned int HalfEdgeMesh::UNINITIALIZED = (std::numeric_limits<unsigned int>::max)()-1;
@@ -305,6 +307,8 @@ std::vector<unsigned int> HalfEdgeMesh::FindNeighborFaces(unsigned int vertexInd
 /*! \lab1 Implement the curvature */
 float HalfEdgeMesh::VertexCurvature(unsigned int vertexIndex) const
 {
+
+
   // Copy code from SimpleMesh or compute more accurate estimate
   std::vector<unsigned int> oneRing = FindNeighborVertices(vertexIndex);
   assert(oneRing.size() != 0);
@@ -346,6 +350,8 @@ float HalfEdgeMesh::VertexCurvature(unsigned int vertexIndex) const
     area += (cot_aj + cot_Bj) * (vi-vj).Length() * (vi-vj).Length();
   }
   float H = (sum_prod.Length() / VertexNormal(vertexIndex).Length()) / (area/2.0f);
+
+  
 
   return H;
 }
@@ -409,13 +415,25 @@ void HalfEdgeMesh::Update() {
   for(unsigned int i = 0; i < GetNumFaces(); i++){
     f(i).normal = FaceNormal(i);
   }
+  
+    // reset the clock
+    timespec tS;
+    tS.tv_sec = 0;
+    tS.tv_nsec = 0;
+    clock_settime(CLOCK_PROCESS_CPUTIME_ID, &tS);
+  
   // Then update all vertex normals and curvature
   for(unsigned int i = 0; i < GetNumVerts(); i++){
     // Vertex normals are just weighted averages
     mVerts.at(i).normal = VertexNormal(i);
   }
+    
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tS);
+    std::cout << "Time for vertnorm calc is: \n" << "sec\n" << tS.tv_nsec / 1000000000.0f << "sec\n";
+    std::cout << tS.tv_nsec / 1000000.0f << " milliseconds" << std::endl;
 
   // Then update vertex curvature
+
   for(unsigned int i = 0; i < GetNumVerts(); i++){
     mVerts.at(i).curvature = VertexCurvature(i);
     //    std::cerr <<   mVerts.at(i).curvature << "\n";

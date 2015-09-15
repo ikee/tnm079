@@ -11,6 +11,7 @@
 *************************************************************************************************/
 #include "Geometry/SimpleMesh.h"
 #include "Util/ColorMap.h"
+#include <iomanip>      // std::setprecision
 
 //-----------------------------------------------------------------------------
 SimpleMesh::SimpleMesh()
@@ -208,12 +209,23 @@ void SimpleMesh::Initialize(){
   for(unsigned int i = 0; i < mFaces.size(); i++){
     mFaces.at(i).normal = FaceNormal(i);
   }
+  
+    // reset the clock
+    timespec tS;
+    tS.tv_sec = 0;
+    tS.tv_nsec = 0;
+    clock_settime(CLOCK_PROCESS_CPUTIME_ID, &tS);
+  
   // Then update all vertex normals and curvature
   for(unsigned int i = 0; i < mVerts.size(); i++){
     // Vertex normals are just weighted averages
     mVerts.at(i).normal = VertexNormal(i);
   }
 
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tS);
+    std::cout << "Time for vertnorm calc is: \n" << "sec\n" << tS.tv_nsec / 1000000000.0f << "sec\n";
+    std::cout << tS.tv_nsec / 1000000.0f << " milliseconds" << std::endl;
+    
   // Then update vertex curvature
   for(unsigned int i = 0; i < mVerts.size(); i++){
     mVerts.at(i).curvature = VertexCurvature(i);
@@ -223,7 +235,7 @@ void SimpleMesh::Initialize(){
   // Finally update face curvature
   for(unsigned int i = 0; i < mFaces.size(); i++){
     mFaces.at(i).curvature = FaceCurvature(i);
-  }
+  } 
 }
 
 
