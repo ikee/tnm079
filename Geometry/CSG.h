@@ -142,8 +142,8 @@ public:
     float D_A = std::exp(-left->GetValue(x,y,z));
     float D_B = std::exp(-right->GetValue(x,y,z));
 
-    float base = (std::pow(D_A, -p) - std::pow(D_B, -p));
-    float result = std::pow(base, -1.0f/p);
+    float base = (std::pow(D_A, p) - std::pow(D_B, p));
+    float result = std::pow(base, 1.0f/p);
     result = std::log(result);
     return result;
   }
